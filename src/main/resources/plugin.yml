@@ -1,0 +1,4 @@
+name: DodgeTheBlocks
+version: '${version}'
+main: com.quarri6343.dodgetheblocks.DodgeTheBlocks
+api-version: 1.20
