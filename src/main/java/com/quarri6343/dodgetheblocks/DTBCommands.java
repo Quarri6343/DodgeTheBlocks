@@ -21,16 +21,20 @@ import java.util.Objects;
 public class DTBCommands extends CommandBase implements Listener {
 
     private static final String commandName = "dtb";
-    private static final String generatorArgument = "generator";
-    private static final String directionArgument = "direction";
+    private static final String generatorArgument = "generatorpos";
+    private static final String directionArgument = "generatordirection";
     private static final String toggleActiveArgument = "toggleactive";
 
     private static final String frequencyArgument = "frequency";
+    
+    private static final String toggleShrinkArgument = "toggleshrink";
+    private static final String platformArgument = "platform";
 
     /**
      * 引数のリスト
      */
-    private static final List<String> arguments = List.of(generatorArgument, directionArgument, toggleActiveArgument, frequencyArgument);
+    private static final List<String> arguments = List.of(generatorArgument, directionArgument, toggleActiveArgument, frequencyArgument, 
+            toggleShrinkArgument, platformArgument);
 
     public DTBCommands() {
         super(commandName, 1, 2, true);
@@ -75,6 +79,11 @@ public class DTBCommands extends CommandBase implements Listener {
             return true;
         }
         else if(arguments[0].equals(frequencyArgument)){
+            if(arguments.length == 1){
+                sendUsage(sender);
+                return true;
+            }
+            
             int frequency;
             try{
                 frequency = Integer.parseInt(arguments[1]);
@@ -91,6 +100,42 @@ public class DTBCommands extends CommandBase implements Listener {
             sender.sendMessage("射出頻度を" + frequency + "tickにしました");
             return true;
         }
+        else if(arguments[0].equals(toggleShrinkArgument)){
+            if(DodgeTheBlocks.getIsActive()){
+                sender.sendMessage("ゲーム中は変更できません");
+                return true;
+            }
+            
+            DodgeTheBlocks.doShrinkPlatform = !DodgeTheBlocks.doShrinkPlatform;
+            sender.sendMessage("足場縮小を" + (DodgeTheBlocks.doShrinkPlatform ? "有効化" : "無効化") + "しました");
+            return true;
+        }
+        else if(arguments[0].equals(platformArgument)){
+            if(arguments.length == 1){
+                sendUsage(sender);
+                return true;
+            }
+
+            if(DodgeTheBlocks.getIsActive()){
+                sender.sendMessage("ゲーム中は変更できません");
+                return true;
+            }
+
+            if(!Objects.equals(arguments[1], "start") && !Objects.equals(arguments[1], "end")){
+                sendUsage(sender);
+                return true;
+            }
+
+            if(Objects.equals(arguments[1], "start")){
+                DodgeTheBlocks.platformPos1 = ((Player)sender).getLocation();
+                sender.sendMessage("縮小する足場の始点を今立っている位置で設定しました");
+            }
+            else{
+                DodgeTheBlocks.platformPos2 = ((Player)sender).getLocation();
+                sender.sendMessage("縮小する足場の終点を今立っている位置で設定しました");
+            }
+            return true;
+        }
         sendUsage(sender);
         return true;
     }
@@ -100,7 +145,9 @@ public class DTBCommands extends CommandBase implements Listener {
         sender.sendMessage(Component.text("/dtb generator {start|end}: ブロックジェネレータの始点と終点を設定する\n" +
                 "/dtb direction: ブロックジェネレータがブロックを射出する方向を設定する\n" +
                 "/dtb toggleactive: 射出を開始/終了する\n" +
-                "/dtb frequency {int}: 射出する頻度(tick)を設定する\n"));
+                "/dtb frequency {int}: 射出する頻度(tick)を設定する\n" +
+                "/dtb toggleshrink : 足場縮小を有効化/無効化する\n" +
+                "/dtb platform {start|end}: 縮小する足場の始点と終点を設定する\n"));
     }
 
     @EventHandler

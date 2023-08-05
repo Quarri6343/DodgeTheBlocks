@@ -5,6 +5,8 @@ import com.kamesuta.physxmc.PhysxMc;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -14,9 +16,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public final class DodgeTheBlocks extends JavaPlugin implements Listener {
 
@@ -32,9 +32,16 @@ public final class DodgeTheBlocks extends JavaPlugin implements Listener {
     
     public static int frequency = 20;
     
+    public static boolean doShrinkPlatform = false;
+    
+    public static Location platformPos1;
+    public static Location platformPos2;
+    
     public static Config config;
     
     public static DodgeTheBlocks instance;
+    
+    private static Map<Location, BlockData> savedPlatform = new HashMap<>();
     
     public DodgeTheBlocks(){
         instance = this;
@@ -59,6 +66,12 @@ public final class DodgeTheBlocks extends JavaPlugin implements Listener {
                 count++;
                 if(count % frequency == 0)
                     launch();
+                
+                if(!doShrinkPlatform)
+                    return;
+                
+                if(count % 60 == 0)
+                    doShrink(count / 60);
             }
         }.runTaskTimer(this, 1, 1);
     }
@@ -69,16 +82,19 @@ public final class DodgeTheBlocks extends JavaPlugin implements Listener {
             deActivate();
         
         config.saveConfig();
+        restorePlatform();
     }
     
     public static void activate(){
         isActive = true;
+        savePlatform();
     }
     
     public static void deActivate(){
         isActive = false;
         PhysxMc.displayedBoxHolder.destroyAll();
         activeBlockTasks.forEach(BukkitTask::cancel);
+        restorePlatform();
     }
     
     public static boolean getIsActive(){
@@ -171,5 +187,106 @@ public final class DodgeTheBlocks extends JavaPlugin implements Listener {
     public void onPlayerDeath(PlayerDeathEvent event) {
         if(isActive)
             event.getPlayer().setGameMode(GameMode.SPECTATOR);
+    }
+
+    /**
+     * 足場を縮小させる
+     * @param level 縮小する段階
+     */
+    private void doShrink(int level){
+        if(platformPos1 == null || platformPos2 == null)
+            return;
+
+        World world = platformPos1.getWorld();
+        
+        int beginX, endX, beginZ, endZ;
+        if(platformPos1.getBlockX() > platformPos2.getBlockX()){
+            beginX = platformPos2.getBlockX();
+            endX = platformPos1.getBlockX();
+        }
+        else{
+            beginX = platformPos1.getBlockX();
+            endX = platformPos2.getBlockX();
+        }
+        if(platformPos1.getBlockZ() > platformPos2.getBlockZ()){
+            beginZ = platformPos2.getBlockZ();
+            endZ = platformPos1.getBlockZ();
+        }
+        else{
+            beginZ = platformPos1.getBlockZ();
+            endZ = platformPos2.getBlockZ();
+        }
+        
+        if(endX - beginX > 100 || endZ - beginZ > 100){
+            return; //消す足場が広すぎるのは多分指定が間違っている
+        }
+        if(beginX + level * 2 >= endX || beginZ + level * 2 >= endZ){
+            return; //これ以上消す足場がない
+        }
+
+        for (int i = beginX; i <= endX; i++) {
+            for (int j = -64; j < 256; j++) {
+                for (int k = beginZ; k < endZ; k++) {
+                    if ((i >= beginX + level && i <= endX - level) && (k >= beginZ + level && k <= endZ - level))
+                        continue;
+                    
+                    world.setBlockData(i,j,k, Material.AIR.createBlockData());
+                }
+            }
+        }
+    }
+
+    /**
+     * 足場を保存する
+     */
+    private static void savePlatform(){
+        if(platformPos1 == null || platformPos2 == null || !doShrinkPlatform)
+            return;
+
+        World world = platformPos1.getWorld();
+        savedPlatform = new HashMap<>();
+
+        int beginX, endX, beginZ, endZ;
+        if(platformPos1.getBlockX() > platformPos2.getBlockX()){
+            beginX = platformPos2.getBlockX();
+            endX = platformPos1.getBlockX();
+        }
+        else{
+            beginX = platformPos1.getBlockX();
+            endX = platformPos2.getBlockX();
+        }
+        if(platformPos1.getBlockZ() > platformPos2.getBlockZ()){
+            beginZ = platformPos2.getBlockZ();
+            endZ = platformPos1.getBlockZ();
+        }
+        else{
+            beginZ = platformPos1.getBlockZ();
+            endZ = platformPos2.getBlockZ();
+        }
+
+        if(endX - beginX > 100 || endZ - beginZ > 100){
+            return; //保存する足場が広すぎるのは多分指定が間違っている
+        }
+
+        for (int i = beginX; i <= endX; i++) {
+            for (int j = -64; j < 256; j++) {
+                for (int k = beginZ; k < endZ; k++) {
+                    Location loc = new Location(world, i,j,k);
+                    savedPlatform.put(loc, world.getBlockData(loc).clone());
+                }
+            }
+        }
+    }
+
+    /**
+     * 足場を復元する
+     */
+    private static void restorePlatform(){
+        if(platformPos1 == null || platformPos2 == null || !doShrinkPlatform)
+            return;
+        
+        savedPlatform.forEach((location, blockData) -> {
+            location.getWorld().setBlockData(location.getBlockX(), location.getBlockY(), location.getBlockZ(), blockData);
+        });
     }
 }

@@ -14,6 +14,9 @@ public class Config {
     private static final String generatorDirectionStr = "generatorDirection";
 
     private static final String frequencyStr = "frequency";
+    private static final String doShrinkPlatformStr = "doShrinkPlatform";
+    private static final String platformPos1Str = "platformPos1";
+    private static final String platformPos2Str = "platformPos2";
 
     /**
      * コンフィグファイル内のデータをデータクラスにコピーする
@@ -27,6 +30,9 @@ public class Config {
         DodgeTheBlocks.generatorPos2 = config.getLocation(generatorPos2Str);
         DodgeTheBlocks.generatorDirection = config.getLocation(generatorDirectionStr);
         DodgeTheBlocks.frequency = config.getInt(frequencyStr);
+        DodgeTheBlocks.doShrinkPlatform = config.getBoolean(doShrinkPlatformStr);
+        DodgeTheBlocks.platformPos1 = config.getLocation(platformPos1Str);
+        DodgeTheBlocks.platformPos2 = config.getLocation(platformPos2Str);
     }
 
     /**
@@ -42,6 +48,9 @@ public class Config {
         config.set(generatorPos2Str, DodgeTheBlocks.generatorPos2);
         config.set(generatorDirectionStr, DodgeTheBlocks.generatorDirection);
         config.set(frequencyStr, DodgeTheBlocks.frequency);
+        config.set(doShrinkPlatformStr, DodgeTheBlocks.doShrinkPlatform);
+        config.set(platformPos1Str, DodgeTheBlocks.platformPos1);
+        config.set(platformPos2Str, DodgeTheBlocks.platformPos2);
 
         plugin.saveConfig();
     }
