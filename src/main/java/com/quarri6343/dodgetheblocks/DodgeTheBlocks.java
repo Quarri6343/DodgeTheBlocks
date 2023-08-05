@@ -2,7 +2,6 @@ package com.quarri6343.dodgetheblocks;
 
 import com.kamesuta.physxmc.DisplayedPhysxBox;
 import com.kamesuta.physxmc.PhysxMc;
-import com.kamesuta.physxmc.PlayerTriggerHolder;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -30,9 +29,19 @@ public final class DodgeTheBlocks extends JavaPlugin {
     
     public static int frequency = 20;
     
+    public static Config config;
+    
+    public static DodgeTheBlocks instance;
+    
+    public DodgeTheBlocks(){
+        instance = this;
+    }
+    
     @Override
     public void onEnable() {
         PhysxMc.playerTriggerHolder.playerTriggerReceivers.add(this::onPlayerEnterBox);
+        config = new Config();
+        config.loadConfig();
         
         new DTBCommands();
         getServer().getPluginManager().registerEvents(new DTBCommands(), this);
@@ -54,6 +63,8 @@ public final class DodgeTheBlocks extends JavaPlugin {
     public void onDisable(){
         if(isActive)
             deActivate();
+        
+        config.saveConfig();
     }
     
     public static void activate(){
@@ -143,9 +154,12 @@ public final class DodgeTheBlocks extends JavaPlugin {
     
     //箱と接触したプレイヤーを弾き飛ばす
     private void onPlayerEnterBox(Player player, DisplayedPhysxBox box){
+        if(!isActive)
+            return;
+        
         Location playerPushLocation = player.getLocation().clone().subtract(box.getLocation());
         Vector playerPushVector = new Vector(playerPushLocation.x(), playerPushLocation.y(), playerPushLocation.z());
         playerPushVector.normalize();
-        player.setVelocity(playerPushVector.multiply(2));
+        player.setVelocity(playerPushVector.multiply(1.5f));
     }
 }
