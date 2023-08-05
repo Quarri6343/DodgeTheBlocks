@@ -220,7 +220,7 @@ public final class DodgeTheBlocks extends JavaPlugin implements Listener {
         if(endX - beginX > 100 || endZ - beginZ > 100){
             return; //消す足場が広すぎるのは多分指定が間違っている
         }
-        if(beginX + level * 2 >= endX || beginZ + level * 2 >= endZ){
+        if(beginX + level * 2 > endX || beginZ + level * 2 > endZ){
             return; //これ以上消す足場がない
         }
 
