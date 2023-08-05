@@ -2,9 +2,12 @@ package com.quarri6343.dodgetheblocks;
 
 import com.kamesuta.physxmc.DisplayedPhysxBox;
 import com.kamesuta.physxmc.PhysxMc;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -15,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public final class DodgeTheBlocks extends JavaPlugin {
+public final class DodgeTheBlocks extends JavaPlugin implements Listener {
 
     public static Location generatorPos1;
     public static Location generatorPos2;
@@ -42,6 +45,7 @@ public final class DodgeTheBlocks extends JavaPlugin {
         PhysxMc.playerTriggerHolder.playerTriggerReceivers.add(this::onPlayerEnterBox);
         config = new Config();
         config.loadConfig();
+        getServer().getPluginManager().registerEvents(this, this);
         
         new DTBCommands();
         getServer().getPluginManager().registerEvents(new DTBCommands(), this);
@@ -161,5 +165,11 @@ public final class DodgeTheBlocks extends JavaPlugin {
         Vector playerPushVector = new Vector(playerPushLocation.x(), playerPushLocation.y(), playerPushLocation.z());
         playerPushVector.normalize();
         player.setVelocity(playerPushVector.multiply(1.5f));
+    }
+
+    @org.bukkit.event.EventHandler
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        if(isActive)
+            event.getPlayer().setGameMode(GameMode.SPECTATOR);
     }
 }
