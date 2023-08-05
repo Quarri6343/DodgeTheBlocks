@@ -43,6 +43,8 @@ public final class DodgeTheBlocks extends JavaPlugin implements Listener {
     
     private static Map<Location, BlockData> savedPlatform = new HashMap<>();
     
+    private static int shrinkLevel;
+    
     public DodgeTheBlocks(){
         instance = this;
     }
@@ -71,7 +73,7 @@ public final class DodgeTheBlocks extends JavaPlugin implements Listener {
                     return;
                 
                 if(count % 60 == 0)
-                    doShrink(count / 60);
+                    doShrink();
             }
         }.runTaskTimer(this, 1, 1);
     }
@@ -88,6 +90,7 @@ public final class DodgeTheBlocks extends JavaPlugin implements Listener {
     public static void activate(){
         isActive = true;
         savePlatform();
+        shrinkLevel = 0;
     }
     
     public static void deActivate(){
@@ -191,9 +194,10 @@ public final class DodgeTheBlocks extends JavaPlugin implements Listener {
 
     /**
      * 足場を縮小させる
-     * @param level 縮小する段階
      */
-    private void doShrink(int level){
+    private void doShrink(){
+        shrinkLevel++;
+        
         if(platformPos1 == null || platformPos2 == null)
             return;
 
@@ -220,14 +224,14 @@ public final class DodgeTheBlocks extends JavaPlugin implements Listener {
         if(endX - beginX > 100 || endZ - beginZ > 100){
             return; //消す足場が広すぎるのは多分指定が間違っている
         }
-        if(beginX + level * 2 > endX || beginZ + level * 2 > endZ){
+        if(beginX + shrinkLevel * 2 > endX || beginZ + shrinkLevel * 2 > endZ){
             return; //これ以上消す足場がない
         }
 
         for (int i = beginX; i <= endX; i++) {
             for (int j = -64; j < 256; j++) {
                 for (int k = beginZ; k < endZ; k++) {
-                    if ((i >= beginX + level && i <= endX - level) && (k >= beginZ + level && k <= endZ - level))
+                    if ((i >= beginX + shrinkLevel && i <= endX - shrinkLevel) && (k >= beginZ + shrinkLevel && k <= endZ - shrinkLevel))
                         continue;
                     
                     world.setBlockData(i,j,k, Material.AIR.createBlockData());
