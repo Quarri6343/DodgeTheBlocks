@@ -19,7 +19,8 @@ repositories {
 
 dependencies {
     compileOnly "io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT"
-    implementation (files("run/plugins/physxmc.jar")) // 実行環境にあるテストビルドのphysxmc
+    implementation (files("run/plugins/PhysxMc.jar")) // 実行環境にあるテストビルドのphysxmc
+    
 }
 
 def targetJavaVersion = 17

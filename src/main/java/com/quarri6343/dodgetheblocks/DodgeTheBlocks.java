@@ -1,11 +1,10 @@
 package com.quarri6343.dodgetheblocks;
 
-import com.kamesuta.physxmc.DisplayedPhysxBox;
 import com.kamesuta.physxmc.PhysxMc;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
+import com.kamesuta.physxmc.core.PhysxBox;
+import com.kamesuta.physxmc.widget.TriggerRelay;
+import com.kamesuta.physxmc.wrapper.DisplayedPhysxBox;
+import org.bukkit.*;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
@@ -18,6 +17,10 @@ import org.bukkit.util.Vector;
 
 import java.util.*;
 
+/**
+ * メインクラス
+ * プロトタイプなんで汚い
+ */
 public final class DodgeTheBlocks extends JavaPlugin implements Listener {
 
     public static Location generatorPos1;
@@ -45,6 +48,10 @@ public final class DodgeTheBlocks extends JavaPlugin implements Listener {
     
     private static int shrinkLevel;
     
+    private static TriggerRelay triggerRelay;
+    
+    private static final Integer[] scores = {0,0,0,0}; //0から順番に赤、青、黄色、緑の箱のスコアのホルダ
+    
     public DodgeTheBlocks(){
         instance = this;
     }
@@ -58,10 +65,17 @@ public final class DodgeTheBlocks extends JavaPlugin implements Listener {
         
         new DTBCommands();
         getServer().getPluginManager().registerEvents(new DTBCommands(), this);
+
+        //triggerRelayはパチンコプラグインのために改造したPhysxMcのapiリレークラス
+        triggerRelay = new TriggerRelay();
+        triggerRelay.goalTriggerReceivers.add(this::onTriggerEnter);
+        
         new BukkitRunnable() {
             int count = 0;
             @Override
             public void run() {
+                triggerRelay.update();
+                
                 if(!isActive)
                     return;
                 
@@ -74,6 +88,12 @@ public final class DodgeTheBlocks extends JavaPlugin implements Listener {
                 
                 if(count % 60 == 0)
                     doShrink();
+                
+                if(count % 20 == 0){
+                    for (Player player : Bukkit.getOnlinePlayers()) {
+                        player.sendActionBar(String.format("§c赤: %d §9青: %d §e黄: %d §a緑: %d", scores[0], scores[1], scores[2], scores[3]));
+                    }
+                }
             }
         }.runTaskTimer(this, 1, 1);
     }
@@ -91,6 +111,8 @@ public final class DodgeTheBlocks extends JavaPlugin implements Listener {
         isActive = true;
         savePlatform();
         shrinkLevel = 0;
+        
+        Arrays.fill(scores, 0);
     }
     
     public static void deActivate(){
@@ -148,7 +170,7 @@ public final class DodgeTheBlocks extends JavaPlugin implements Listener {
         launchLocation.setDirection(getRandomDirection());
         Vector scale = new Vector(0.6f, 0.6f, 0.6f);
         ItemStack itemStack = new ItemStack(material);
-        DisplayedPhysxBox box = PhysxMc.displayedBoxHolder.createDisplayedBox(launchLocation, scale, itemStack);
+        DisplayedPhysxBox box = PhysxMc.displayedBoxHolder.createDisplayedBox(launchLocation, scale, itemStack, List.of(new Vector()));
         
         box.throwBox(generatorDirection);
 
@@ -157,7 +179,7 @@ public final class DodgeTheBlocks extends JavaPlugin implements Listener {
             public void run() {
                 PhysxMc.displayedBoxHolder.destroySpecific(box);
             }
-        }.runTaskLater(this, 100);
+        }.runTaskLater(this, 140);
         activeBlockTasks.add(task);
     }
     
@@ -292,5 +314,19 @@ public final class DodgeTheBlocks extends JavaPlugin implements Listener {
         savedPlatform.forEach((location, blockData) -> {
             location.getWorld().setBlockData(location.getBlockX(), location.getBlockY(), location.getBlockZ(), blockData);
         });
+    }
+
+    /**
+     * ゴールのトリガーを作る
+     */
+    public static void createGoalBox(int index, Location loc) {
+        triggerRelay.createTriggerBox(index, loc);
+    }
+
+    /**
+     * ゴールにパチンコ玉が入ったイベント
+     */
+    public void onTriggerEnter(Integer index){
+        scores[index]++;
     }
 }

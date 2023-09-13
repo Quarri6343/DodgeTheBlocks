@@ -1,17 +1,15 @@
 package com.quarri6343.dodgetheblocks;
 
 import com.destroystokyo.paper.event.server.AsyncTabCompleteEvent;
-import com.kamesuta.physxmc.CommandBase;
-import com.kamesuta.physxmc.PhysxMc;
-import com.kamesuta.physxmc.PhysxSetting;
+import com.kamesuta.physxmc.command.CommandBase;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -29,12 +27,15 @@ public class DTBCommands extends CommandBase implements Listener {
     
     private static final String toggleShrinkArgument = "toggleshrink";
     private static final String platformArgument = "platform";
+    private static final String goalArgument = "goal";
+    
+    private static final List<String> goalColor = List.of("red", "blue", "yellow", "green");
 
     /**
      * 引数のリスト
      */
     private static final List<String> arguments = List.of(generatorArgument, directionArgument, toggleActiveArgument, frequencyArgument, 
-            toggleShrinkArgument, platformArgument);
+            toggleShrinkArgument, platformArgument, goalArgument);
 
     public DTBCommands() {
         super(commandName, 1, 2, true);
@@ -136,6 +137,26 @@ public class DTBCommands extends CommandBase implements Listener {
             }
             return true;
         }
+        else if(arguments[0].equals(goalArgument)){
+            if(arguments.length == 1){
+                sendUsage(sender);
+                return true;
+            }
+
+            for (int i = 0; i < goalColor.size(); i++) {
+                if(goalColor.get(i).equals(arguments[1])){
+                    Location loc  = ((Player)sender).getLocation();
+                    DodgeTheBlocks.createGoalBox(i, loc);
+                    sender.sendMessage("ゴールを登録しました");
+                    return true;
+                }
+            }
+            
+            sendUsage(sender);
+            return true;
+        }
+        
+        
         sendUsage(sender);
         return true;
     }
