@@ -146,7 +146,7 @@ public final class DodgeTheBlocks extends JavaPlugin implements Listener {
 
         Location launchLocation = new Location(generatorDirection.getWorld(), x,y,z);
         launchLocation.setDirection(getRandomDirection());
-        Vector scale = new Vector(random.nextInt(2,6),random.nextInt(2,6),random.nextInt(2,6));
+        Vector scale = new Vector(0.6f, 0.6f, 0.6f);
         ItemStack itemStack = new ItemStack(material);
         DisplayedPhysxBox box = PhysxMc.displayedBoxHolder.createDisplayedBox(launchLocation, scale, itemStack);
         
